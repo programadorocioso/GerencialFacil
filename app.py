@@ -1,4 +1,4 @@
-from tkinter import Tk,Label,Entry,Button,Text,Toplevel,Radiobutton,Frame,Listbox
+from tkinter import Tk,Label,Entry,Button,Text,Toplevel,Radiobutton,Frame,Listbox,ttk
 from tkinter import filedialog,messagebox,Grid,NSEW,END,LEFT,RIGHT,TOP,BOTTOM,CENTER
 import processamento as pr
 from processamento import path
@@ -52,7 +52,8 @@ class App:
             self.root,
         text="Executar Vendas",
         padx=5, pady=5,
-        font="arial 25"
+        font="arial 25",
+        command=self.abrir_vendas
         )
 
         self.botao_checar_estoque = Button(
@@ -453,10 +454,12 @@ class App:
     def fechar_relatorios(self):
         self.relatorios_open = False
         self.janela_relatorios.destroy()
+        self.root.deiconify()
     
     def abrir_relatorios(self):
         if not self.relatorios_open:
             self.relatorios_open = True
+            self.root.withdraw()
             self.janela_relatorios = Toplevel(self.root)
             self.janela_relatorios.protocol("WM_DELETE_WINDOW",self.fechar_relatorios)
             self.janela_relatorios.title("Relatórios de venda")
@@ -482,8 +485,8 @@ class App:
                 font="arial 25"
                 )
             
-            self.frame_esquerdo.pack(fill="y",side=LEFT)
-            self.frame_direito.pack(fill="y",side=RIGHT)
+            self.frame_esquerdo.pack(fill="both",side=LEFT)
+            self.frame_direito.pack(fill="both",side=RIGHT)
             self.dias.grid(row=0,column=0,sticky=NSEW)
             self.hoje.grid(row=0,column=1,sticky=NSEW)
             self.lista_relatorios.grid(row=1,column=0,columnspan=2,sticky=NSEW)
@@ -499,6 +502,83 @@ class App:
 
         else:
             self.janela_relatorios.focus()
+
+    def fechar_vendas(self):
+        pr.mudar_diretorio(pr.root_path)
+        self.vender_open = False
+        self.janela_vendas.destroy()
+        self.root.deiconify()
+
+    def abrir_vendas(self):
+        if not self.vender_open:
+            self.root.withdraw()
+            self.vender_open = True
+            self.janela_vendas = Toplevel(self.root)
+            self.janela_vendas.title("Realizar Vendas")
+            self.janela_vendas.geometry(self.tamanho_janela)
+            self.janela_vendas.protocol("WM_DELETE_WINDOW",self.fechar_vendas)
+            self.frame_esquerdo_vendas = Frame(self.janela_vendas)
+            self.frame_direito_vendas = Frame(self.janela_vendas)
+            self.detalhes_pedido = Text(self.frame_direito_vendas,font="arial 25")
+            self.label_qantidade = Label(
+                self.frame_esquerdo_vendas,
+                text="Quantidade: ",
+                font="arial 25"
+                )
+            self.campo_quantidade = Entry(
+                self.frame_esquerdo_vendas,
+                font="arial 25"
+                )
+            self.label_busca = Label(
+                self.frame_esquerdo_vendas,
+                text=" Nome do Produto: ",
+                font="arial 25"
+                )
+            self.campo_busca = Entry(self.frame_esquerdo_vendas,font="arial 25")
+            self.lista_produtos = Listbox(self.frame_esquerdo_vendas,font="arial 25")
+            
+            self.botao_adicionar_produto = Button(
+                self.frame_esquerdo_vendas,
+                text="Adicionar",
+                font="arial 25"
+                )
+
+            self.botao_remover_produto = Button(
+                self.frame_esquerdo_vendas,
+                text="Remover",
+                font="arial 25"
+                )
+
+            self.botao_finalizar_venda = Button(
+                self.frame_esquerdo_vendas,
+                text="Finalizar venda",
+                font="arial 25"
+                )
+            self.botao_buscar_produto = Button(
+                self.frame_esquerdo_vendas,
+                text="Buscar",
+                font="arial 25"
+                )
+            self.frame_esquerdo_vendas.pack(fill="both",side=LEFT)
+            self.frame_direito_vendas.pack(fill="both",side=RIGHT)
+            self.label_busca.grid(row=0,column=0,columnspan=2,sticky=NSEW)
+            self.campo_busca.grid(row=1,column=0,columnspan=2,sticky=NSEW)
+            self.botao_buscar_produto.grid(row=2,column=0,columnspan=2,sticky=NSEW)
+            self.lista_produtos.grid(row=3,column=0,columnspan=2,sticky=NSEW)
+            self.botao_adicionar_produto.grid(row=4,column=0,sticky=NSEW)
+            self.botao_remover_produto.grid(row=4,column=1,sticky=NSEW)
+            self.botao_finalizar_venda.grid(row=5,column=0,columnspan=2,sticky=NSEW)
+            for i in range(6):
+                Grid.rowconfigure(self.frame_esquerdo_vendas,i,weight=1)
+            for i in range(2):
+                Grid.columnconfigure(self.frame_esquerdo_vendas,i,weight=1)
+            self.detalhes_pedido.grid(row=0,column=0,sticky=NSEW)
+            Grid.rowconfigure(self.frame_direito_vendas,0,weight=1)
+            Grid.columnconfigure(self.frame_direito_vendas,0,weight=1)
+     
+        else:
+            self.janela_vendas.focus()
+
 
 if __name__ == "__main__":
     root = Tk()
