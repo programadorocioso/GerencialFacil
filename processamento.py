@@ -5,25 +5,67 @@ from datetime import datetime as dt
 from string import capwords
 from imagens import *
 import qrcode as qr
+from pyperclip import copy as to_clipboard
+from sys import platform
+from base64 import b64decode as b64dc
+from io import BytesIO
+from PIL import Image
+from re import sub
 def chave_pix():
     return "5802a211-c732-4d7a-a023-0b06da757174"
 def pix_qrcode():
     return "00020126850014br.gov.bcb.pix01365802a211-c732-4d7a-a023-0b06da7571740223Ytalo Santos Aragao Dev5204000053039865802BR5919YTALO SANTOS ARAGAO6015NOSSA SENHORA D62240520GerencialFacilDoacao6304E949"
-def gerar_qrcode(string):
+#Gera os ícones para cada uma das plaraformas
+#e retorna o ícone adequado para a plataforma atual
+def gerar_icones():
+    mudar_diretorio(config_path)
+    icones = [icon_linux,icon_windows,icon_mac,icon_bitmap]
+    formatos = ["png","ico","icns","bmp"]
+    imagem = Image.open(BytesIO(b64dc(program_icon())))
+    for icon in icones:
+        iconfile = imagem
+        formato_index = icones.index(icon)
+        iconfile.save(icon,format=str(formatos[formato_index]))
+    if platform.lower() == "linux":
+        return icon_linux
+    elif platform.lower() == "windows":
+        return icon_windows
+    elif platform.lower() == "darwin":
+        return icon_mac
+    else:
+        return icon_linux
+#Gera o arquivo de QRCode a partir da string
+def gerar_qrcode():
+    string = pix_qrcode()
     mudar_diretorio(config_path)
     qrcodepix = qr.make(string)
     qrcodepix.save("qrcode.png")
-def busca_dic_keys(dic,busca):
-    list_keys = []
+#Mapeia um um diretório para um dicionário:
+#<nome_cliente_ou_produto>:<nome_do_arquivo>
+#Somente com as chaves que passam pelo filtro
+def mapa_arquivos(filtro,caminho):
+    list_dir = listdir(caminho)
+    filtro = filtro.replace(" ","_")
+    list_dir.sort()
+    list_dir_nomes = []
     resultado = {}
-    for key in dic:
-        list_keys.append(key)
-    for key_name in list_keys:
-        if key_name.__contains__(busca):
-            resultado.update({key_name:dic[key_name]})
-    print("Lista de chaves: ",list_keys)
-    print("Resultado: ",resultado)
+    filtro_tratado = tratar_string_nome(filtro)
+
+    for i in range(len(list_dir)):
+        nome = ""
+        if list_dir[i].endswith("_cliente.json"):
+            nome = list_dir[i].replace("_cliente.json","").replace("_"," ").capitalize()
+        elif list_dir[i].endswith("_produto.json"):
+            nome = list_dir[i].replace("_produto.json","").replace("_"," ").capitalize()
+        elif list_dir[i].endswith("_report.json"):
+            nome = list_dir[i].replace("_report.json","").replace("_"," ").capitalize()
+
+        list_dir_nomes.append(nome)
+    for i in range(len(list_dir)):
+        if list_dir_nomes[i].lower().__contains__(filtro_tratado):
+            resultado[list_dir_nomes[i].replace("_"," ").capitalize()] = list_dir[i]
     return resultado
+
 
 #ler_Arquivo_json_para_python lê um arquivo json e retorna um dicionário python
 def ler_arquivo_json_para_python(caminho):
@@ -97,8 +139,30 @@ def cadastrar_produto(dicionario_dados):
     dados_json = json.dumps(dicionario_dados, indent=4, ensure_ascii=False)
     salvar_produto(dados_json,tratar_string_nome(dicionario_dados["nome"]))
 
-def gerar_relatorio_venda(relatorio_dicionario):
-    return 0
+def gerar_relatorio_venda(cliente,lista_venda):
+    mudar_diretorio(products_path)
+    relatorio = {}
+    produtos = {}
+    total_venda = 0
+    nome_arquivo = data_hora()+"_report"
+    if cliente != "cliente_padrao":
+            nome = ler_arquivo_json_para_python(cliente)["nome"]
+    else:
+        nome = cliente
+    relatorio[nome] = {}
+    for item in lista_venda:
+        produto = ler_arquivo_json_para_python(item[0])["nome"]
+        quantidade = item[1]
+        valor_unitario = item[2]
+        total = quantidade * valor_unitario
+        total_venda += total
+        relatorio[nome][produto] = {"quantidade":quantidade,"valor_unitario":valor_unitario,"total":total}
+    relatorio[nome]["Total da venda"] = total_venda
+    dados = json.dumps(relatorio,indent=4,ensure_ascii=False)
+    mudar_diretorio(reports_path)
+    string_para_arquivo(dados,nome_arquivo)
+    mudar_diretorio(root_path)
+    
 
 def gerar_relatorio_dia(relatorio_dicionario):
     return 0
@@ -137,20 +201,35 @@ def gerar_lista(caminho):
     elif caminho == reports_path:
         return listdir(caminho)
 
-def numero_string(string):
+def numero_string(string_input):
     try:
-        inteiro = int(string)
-        return  inteiro
-    except:
-        try:
-            if (string.__contains__(".") and string.__contains__(",")):
-                decimal = float(string.replace(".","").replace(",","."))
+        if string_input.__contains__(".") and string_input.__contains__(","):
+            try:
+                valor = string_input.replace(".","").replace(",",".")
+                decimal = float(valor)
                 return decimal
-            else:
-                decimal = float(string.replace(",","."))
-            return decimal
-        except:
-            return string
+            except:
+                pass
+        elif string_input.__contains__(","):
+            try:
+                valor = string_input.replace(",",".")
+                decimal = float(valor)
+                return decimal
+            except:
+                pass
+        elif string_input.__contains__("."):
+            try:
+                decimal = float(string_input)
+                return decimal
+            except:
+                pass
+        else:
+            try:
+                return int(string_input)
+            except:
+                return string_input
+    except:
+        return string_input
 
 def vender(dicionario_venda):
     dados_relatorio_venda = {}
@@ -158,14 +237,3 @@ def vender(dicionario_venda):
     for produto in dicionario_venda:
         item = produto
         quantidade = dicionario_venda[item]
-#venda = {"saco_de_sal_25kg":5,"produto":"n/a"}
-#vender(venda)
-#valor = "10000000000,654"
-#print(f"Valor2: {valor} Tipo: {type(valor)}")
-#print(valor,numero_string(valor))
-#print(index_listagem(products_path))
-
-#busca_dic_keys(dicionario,"soja")
-#gerar_default_paths()
-#dicionario = {"nome":"Ytalo Santos Aragão Silva","exemplo":"dicionário"}
-#cadastrar_cliente(dicionario)
