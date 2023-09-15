@@ -29,7 +29,7 @@ class App:
         self.root.iconphoto(True,self.icon)
         self.botao_produtos = Button(
             self.root,
-            text="Gerenciar produtos",
+            text="Gerenciar Produtos",
             padx=5, pady=5,
             font="arial 25",
             command=self.abrir_produtos
