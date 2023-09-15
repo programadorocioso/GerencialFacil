@@ -155,7 +155,7 @@ def gerar_relatorio_venda(cliente,lista_venda):
         quantidade = item[1]
         valor_unitario = item[2]
         total = quantidade * valor_unitario
-        total_venda += total
+        total_venda += total 
         relatorio[nome][produto] = {"quantidade":quantidade,"valor_unitario":valor_unitario,"total":total}
     relatorio[nome]["Total da venda"] = total_venda
     dados = json.dumps(relatorio,indent=4,ensure_ascii=False)
