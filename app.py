@@ -10,8 +10,8 @@ class App:
         pr.gerar_qrcode()
         self.lista_relatorios = pr.mapa_arquivos("",pr.reports_path)
         self.contador_produtos = 0
-        self.pix = pr.chave_pix()
-        self.qrcode = pr.pix_qrcode()
+        self.pix = pr.chave_pix
+        self.qrcode = pr.pix_qrcode
         self.root = root
         self.w = self.root.winfo_screenwidth()
         self.h = self.root.winfo_screenheight()
@@ -129,7 +129,7 @@ class App:
             pass
 
     def copiar_PIX(self):
-        pr.to_clipboard(pr.chave_pix())
+        pr.copiar_PIX()
         messagebox.showinfo(
             title="Chave copiada com sucesso",
             message="Chave PIX copiada!"

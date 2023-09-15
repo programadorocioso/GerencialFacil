@@ -5,16 +5,20 @@ from datetime import datetime as dt
 from string import capwords
 from imagens import *
 import qrcode as qr
-from pyperclip import copy as to_clipboard
 from sys import platform
 from base64 import b64decode as b64dc
 from io import BytesIO
 from PIL import Image
 from re import sub
-def chave_pix():
-    return "5802a211-c732-4d7a-a023-0b06da757174"
-def pix_qrcode():
-    return "00020126850014br.gov.bcb.pix01365802a211-c732-4d7a-a023-0b06da7571740223Ytalo Santos Aragao Dev5204000053039865802BR5919YTALO SANTOS ARAGAO6015NOSSA SENHORA D62240520GerencialFacilDoacao6304E949"
+import clipboard as cpb
+import multiprocessing
+import pyperclip as ppc
+from threading import Thread
+chave_pix ="5802a211-c732-4d7a-a023-0b06da757174"
+pix_qrcode = "00020126850014br.gov.bcb.pix01365802a211-c732-4d7a-a023-0b06da7571740223Ytalo Santos Aragao Dev5204000053039865802BR5919YTALO SANTOS ARAGAO6015NOSSA SENHORA D62240520GerencialFacilDoacao6304E949"
+def copiar_PIX():
+    cpb.copy(chave_pix)
+
 #Gera os ícones para cada uma das plaraformas
 #e retorna o ícone adequado para a plataforma atual
 def gerar_icones():
@@ -36,7 +40,7 @@ def gerar_icones():
         return icon_linux
 #Gera o arquivo de QRCode a partir da string
 def gerar_qrcode():
-    string = pix_qrcode()
+    string = pix_qrcode
     mudar_diretorio(config_path)
     qrcodepix = qr.make(string)
     qrcodepix.save("qrcode.png")
@@ -162,13 +166,6 @@ def gerar_relatorio_venda(cliente,lista_venda):
     mudar_diretorio(reports_path)
     string_para_arquivo(dados,nome_arquivo)
     mudar_diretorio(root_path)
-    
-
-def gerar_relatorio_dia(relatorio_dicionario):
-    return 0
-
-def index_listagem(caminho):
-    return listdir(caminho)
 
 def index_listbox(caminho):
     dicionario = {}
@@ -230,10 +227,3 @@ def numero_string(string_input):
                 return string_input
     except:
         return string_input
-
-def vender(dicionario_venda):
-    dados_relatorio_venda = {}
-    nome_arquivo = data_hora()
-    for produto in dicionario_venda:
-        item = produto
-        quantidade = dicionario_venda[item]
